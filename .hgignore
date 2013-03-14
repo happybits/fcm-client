@@ -1,0 +1,4 @@
+syntax: regexp
+
+# virtual environment used for testing
+^env/

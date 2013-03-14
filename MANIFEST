@@ -1,0 +1,6 @@
+LICENSE
+README.rst
+setup.py
+gcmclient/__init__.py
+gcmclient/gcm.py
+gcmclient/test.py
