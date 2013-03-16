@@ -12,13 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
-import json
 import random
+import requests
+
+try:
+    import json
+except ImportError:
+    # try some wrapper
+    import omnijson as json
 
 # all you need
 __all__ = ('GCMAuthenticationError', 'JSONMessage', 'PlainTextMessage', 'GCM')
-
 
 # More info: http://developer.android.com/google/gcm/gcm.html
 GCM_URL = 'https://android.googleapis.com/gcm/send'
@@ -128,9 +132,6 @@ class JSONMessage(Message):
         if not isinstance(registration_ids, (list, tuple)):
             registration_ids = list(registration_ids)
 
-        if len(registration_ids) > 1000:
-            raise ValueError("Exceded number of registration_ids")
-
         payload['registration_ids'] = registration_ids
         return payload
 
@@ -142,7 +143,11 @@ class JSONMessage(Message):
 
     def parse_response(self, response):
         """ Parse JSON response. """
-        data = json.loads(response.content) # raises ValueError
+        if not isinstance(response, basestring):
+            # requests.Response object
+            response = response.content
+
+        data = json.loads(response) # raises ValueError
         if 'results' not in data or len(data.get('results')) != len(self.registration_ids):
             raise ValueError("Invalid response")
 
@@ -154,7 +159,7 @@ class JSONMessage(Message):
         for reg_id, res in zip(self.registration_ids, data['results']):
             if 'message_id' in res:
                 success[reg_id] = res['message_id']
-                if 'registration_id':
+                if 'registration_id' in res:
                     canonicals[reg_id] = res['registration_id']
             else:
                 if res['error'] == "Unavailable" or res['error'] == "InternalServerError":
@@ -211,7 +216,7 @@ class PlainTextMessage(Message):
         if not registration_id:
             raise ValueError("registration_id is required")
 
-        payload = {'registration_id': registration_id}
+        payload['registration_id'] = registration_id
         return payload
 
     def parse_response(self, response):
@@ -221,7 +226,11 @@ class PlainTextMessage(Message):
         not_registered = []
         errors = {}
 
-        lines = response.content.strip().split('\n')
+        if not isinstance(response, basestring):
+            # requests.Response object
+            response = response.content
+
+        lines = response.strip().split('\n')
         if lines[0].startswith("Error="):
             error_code = lines[0][6:].strip()
             if error_code == "NotRegistered":
@@ -234,11 +243,11 @@ class PlainTextMessage(Message):
             success[self.registration_id] = lines[0][3:].strip()
             if len(lines) > 1:
                 if lines[1].startswith("registration_id="):
-                    canonicals[self.registration_id] = lines[1][16:0]
+                    canonicals[self.registration_id] = lines[1][16:]
                 else:
                     raise ValueError("Can not parse second line of response body: {0}".format(lines[1]))
         else:
-            raise ValueError("Can not parse response body: {0}".format(response.content))
+            raise ValueError("Can not parse response body: {0}".format(response))
 
         return {
             'success': success,
@@ -393,14 +402,22 @@ class GCM(object):
 
     def send(self, message):
         """ Send message.
+            
+            The message may contain various options, such as time-to-live. If GCM
+            rejects your request because your options are invalid, then ``ValueError``
+            will be raised. Check error.args[0] for preceice explanation of the problem.
+            In any case, a ValueError means severe problem that you can't retry.
+
+            Arguments:
+                message (:class:`Message`): plain text or JSON message
 
             Returns:
                 Result instance in case of (partial) success.
 
             Raises:
                 ``requests.exceptions.RequestException`` on any network problem.
+                ``ValueError`` GCM rejected request or we rejected response.
                 :class:`GCMAuthenticationError` your API key is invalid.
-                ``ValueError`` Google rejected JSON or response can't be parsed or other *fix that library!* error. Contact me if it happens.
         """
         headers = {
             'Authorization': 'key=%s' % self.api_key,
@@ -413,7 +430,7 @@ class GCM(object):
         # other problems.
         response = requests.post(self.url, data=data, headers=headers, **self.requests_options)
 
-        # invalid JSON. Body contains explanation.
+        # invalid JSON. Body contains explanation. Happens if options are invalid.
         if response.status_code == 400:
             raise ValueError(response.content)
 

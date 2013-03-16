@@ -2,3 +2,6 @@ syntax: regexp
 
 # virtual environment used for testing
 ^env/
+
+# built package
+^dist/
