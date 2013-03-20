@@ -34,6 +34,8 @@ me if you find any bugs or need help. You can view outstanding issues on the
 
 Usage
 -----
+`Read documentation <http://gcm-client.readthedocs.org/>`_ for more info.
+
 Usage is straightforward::
 
     from gcmclient import *

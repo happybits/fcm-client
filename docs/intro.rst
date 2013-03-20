@@ -14,7 +14,6 @@ codes, such as ``MismatchSenderId``, that can be returned by GCM.
 
 Usage
 -----
-.. highlight:: python
 Usage is straightforward::
 
     from gcmclient import *
@@ -79,3 +78,4 @@ Usage is straightforward::
         # are broken. when problem is resolved, you can
         # retry the whole message.
         print "Something wrong with requests library"
+
