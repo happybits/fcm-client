@@ -5,7 +5,7 @@ setup(
     version='0.1',
     author='Sardar Yumatov',
     author_email='ja.doma@gmail.com',
-    url='https://bitbucket.org/sardarnl/gcm-client/overview',
+    url='https://bitbucket.org/sardarnl/gcm-client',
     description='Python client for Google Cloud Messaging (GCM)',
     long_description=open('README.rst').read(),
     packages=['gcmclient'],

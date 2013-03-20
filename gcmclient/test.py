@@ -21,7 +21,7 @@ class GCMClientTest(unittest.TestCase):
                    dry_run=True)
 
         headers = {}
-        data = msg.prepare(headers)
+        data = msg._prepare(headers)
 
         # will be URL encoded by requests
         ex_data = {'collapse_key': 'collapse.key',
@@ -40,7 +40,7 @@ class GCMClientTest(unittest.TestCase):
         self.assertEqual(headers, ex_headers)
 
         # responses
-        rsp = msg.parse_response("id=1:2342\nregistration_id=32\n")
+        rsp = msg._parse_response("id=1:2342\nregistration_id=32\n")
         ex_rsp = {
             'canonicals': {'target_device': '32'},
             'failed': {},
@@ -49,7 +49,7 @@ class GCMClientTest(unittest.TestCase):
         }
         self.assertEqual(rsp, ex_rsp)
 
-        rsp = msg.parse_response("Error=InvalidRegistration")
+        rsp = msg._parse_response("Error=InvalidRegistration")
         ex_rsp = {
             'canonicals': {},
             'failed': {'target_device': 'InvalidRegistration'},
@@ -59,7 +59,7 @@ class GCMClientTest(unittest.TestCase):
         self.assertEqual(rsp, ex_rsp)
 
         # retry (must be ['target_device'], but we test here the difference)
-        msg2 = msg.retry(['target_device_retry'])
+        msg2 = msg._retry(['target_device_retry'])
         self.assertEqual(msg2.registration_id, 'target_device_retry')
         self.assertEqual(msg2.options, msg.options)
         self.assertEqual(msg2.data, msg.data)
@@ -76,7 +76,7 @@ class GCMClientTest(unittest.TestCase):
                    dry_run=True)
 
         headers = {}
-        data = msg.prepare(headers)
+        data = msg._prepare(headers)
 
         # will be URL encoded by requests
         ex_data = json.dumps({'collapse_key': 'collapse.key',
@@ -110,7 +110,7 @@ class GCMClientTest(unittest.TestCase):
           ]
         })
 
-        rsp = msg.parse_response(response)
+        rsp = msg._parse_response(response)
         ex_rsp = {
             'multicast_id': 1,
             'canonicals': {'D': u'32'},
@@ -122,7 +122,7 @@ class GCMClientTest(unittest.TestCase):
         self.assertEqual(rsp, ex_rsp)
 
         # retry (must be ['target_device'], but we test here the difference)
-        msg2 = msg.retry(['B'])
+        msg2 = msg._retry(['B'])
         self.assertEqual(msg2.registration_ids, ['B'])
         self.assertEqual(msg2.options, msg.options)
         self.assertEqual(msg2.data, msg.data)

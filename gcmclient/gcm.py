@@ -1,4 +1,4 @@
-# Copyright 2013 Sardar Yumatov
+# Copyright 2013 Getlogic BV, Sardar Yumatov
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@ import requests
 try:
     import json
 except ImportError:
-    # try some wrapper
     import omnijson as json
 
 # all you need
 __all__ = ('GCMAuthenticationError', 'JSONMessage', 'PlainTextMessage', 'GCM')
 
 # More info: http://developer.android.com/google/gcm/gcm.html
+#: Default URL to GCM service.
 GCM_URL = 'https://android.googleapis.com/gcm/send'
 
 class GCMAuthenticationError(ValueError):
@@ -33,7 +33,7 @@ class GCMAuthenticationError(ValueError):
 
 class Message(object):
     """ Base message class. """
-    # recognized options
+    # recognized options, read GCM manual for more info.
     OPTIONS = {
         'collapse_key': lambda v: v if isinstance(v, basestring) else str(v),
         'time_to_live': int,
@@ -43,32 +43,32 @@ class Message(object):
     }
 
     def __init__(self, data=None, options=None):
-        """ Construct new message.
+        """ Abstract message.
+
+            :Arguments:
+                - `data` (dict): key-value pairs, payload of this message.
+                - `options` (dict): GCM options.
 
             Refer to `GCM <http://developer.android.com/google/gcm/gcm.html#request>`_
             for more explanation on available options.
 
-            Arguments:
-                data (dict): key-value pairs, payload of this message.
-                options (dict): GCM options.
-
-            Options:
-                collapse_key (str): collapse key/bucket.
-                time_to_live (int): message TTL in seconds.
-                delay_while_idle (bool): hold message if device is off-line.
-                restricted_package_name (str): declare package name.
-                dry_run (bool): pretend sending message to devices.
+            :Options:
+                - `collapse_key` (str): collapse key/bucket.
+                - `time_to_live` (int): message TTL in seconds.
+                - `delay_while_idle` (bool): hold message if device is off-line.
+                - `restricted_package_name` (str): declare package name.
+                - `dry_run` (bool): pretend sending message to devices.
         """
         self.data = data
         self.options = options or {}
 
-    def prepare_data(self, payload, data=None):
+    def _prepare_data(self, payload, data=None):
         """ Hook to format message data payload. """
         data = data or self.data
         if data:
             payload['data'] = data
 
-    def prepare_payload(self, data=None, options=None):
+    def _prepare_payload(self, data=None, options=None):
         """ Hook to prepare all message options. """
         options = options or self.options
         payload = {}
@@ -82,10 +82,10 @@ class Message(object):
             if val:
                 payload[opt] = val
 
-        self.prepare_data(payload, data=data)
+        self._prepare_data(payload, data=data)
         return payload
 
-    def prepare(self, headers, data=None, options=None):
+    def _prepare(self, headers, data=None, options=None):
         """ Prepare message for HTTP request.
         
             The method should at least set 'Content-Type' header.  If message
@@ -100,9 +100,9 @@ class Message(object):
         """
         headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8'
         # return dict, will be URLencoded by requests
-        return self.prepare_payload(data=data, options=options)
+        return self._prepare_payload(data=data, options=options)
 
-    def parse_response(self, response):
+    def _parse_response(self, response):
         """ Parse GCM response. Subclasses must override this method. """
         raise NotImplementedError
 
@@ -111,19 +111,19 @@ class JSONMessage(Message):
     """ JSON formatted message. """
 
     def __init__(self, registration_ids=None, data=None, **options):
-        """ Construct new multicast message.
+        """ Multicast message, uses JSON format.
 
-            Arguments:
-                registration_ids (list): registration ID's of target devices.
-                data (dict): key-value pairs of message payload.
-                options (kwargs): GCM options, see :class:`Message` for more info.
+            :Arguments:
+                - `registration_ids` (list): registration ID's of target devices.
+                - `data` (dict): key-value pairs of message payload.
+                - `options` (kwargs): GCM options, see :class:`Message` for more info.
         """
         super(JSONMessage, self).__init__(data, options)
         self.registration_ids = registration_ids or []
 
-    def prepare_payload(self, data=None, options=None):
+    def _prepare_payload(self, data=None, options=None):
         """ Prepare message payload. """
-        payload = super(JSONMessage, self).prepare_payload(data=data, options=options)
+        payload = super(JSONMessage, self)._prepare_payload(data=data, options=options)
 
         if not self.registration_ids:
             raise ValueError("Empty registration_ids list")
@@ -135,13 +135,13 @@ class JSONMessage(Message):
         payload['registration_ids'] = registration_ids
         return payload
 
-    def prepare(self, headers, data=None, options=None):
+    def _prepare(self, headers, data=None, options=None):
         """ Serializes messaget to JSON. """
         headers['Content-Type'] = 'application/json'
-        payload = self.prepare_payload(data=data, options=options)
+        payload = self._prepare_payload(data=data, options=options)
         return json.dumps(payload)
 
-    def parse_response(self, response):
+    def _parse_response(self, response):
         """ Parse JSON response. """
         if not isinstance(response, basestring):
             # requests.Response object
@@ -178,7 +178,7 @@ class JSONMessage(Message):
             'failed': errors,
         }
 
-    def retry(self, unavailable):
+    def _retry(self, unavailable):
         """ Create new message for given unavailable ID's list. """
         return JSONMessage(unavailable, self.data, **self.options)
 
@@ -187,18 +187,18 @@ class PlainTextMessage(Message):
     """ Plain-text unicast message. """
 
     def __init__(self, registration_id=None, data=None, **options):
-        """ Construct new unicast message.
+        """ Unicast message, uses plain text format.
             All values in the data payload must be URL encodable scalars.
 
-            Arguments:
-                registration_id (str): registration ID of target device.
-                data (dict): key-value pairs of message payload.
-                options (kwargs): GCM options, see :class:`Message` for more info.
+            :Arguments:
+                - `registration_id` (str): registration ID of target device.
+                - `data` (dict): key-value pairs of message payload.
+                - `options` (kwargs): GCM options, see :class:`Message` for more info.
         """
         super(PlainTextMessage, self).__init__(data, options)
         self.registration_id = registration_id
 
-    def prepare_data(self, payload, data=None):
+    def _prepare_data(self, payload, data=None):
         """ Prepare data key-value pairs for URL encoding. """
         data = data or self.data
         if data:
@@ -208,9 +208,9 @@ class PlainTextMessage(Message):
                     # does not support complex values.
                     payload['data.%s' % k] = v
 
-    def prepare_payload(self, registration_id=None, data=None, options=None):
+    def _prepare_payload(self, registration_id=None, data=None, options=None):
         """ Prepare message payload. """
-        payload = super(PlainTextMessage, self).prepare_payload(data=data, options=options)
+        payload = super(PlainTextMessage, self)._prepare_payload(data=data, options=options)
 
         registration_id = registration_id or self.registration_id
         if not registration_id:
@@ -219,7 +219,7 @@ class PlainTextMessage(Message):
         payload['registration_id'] = registration_id
         return payload
 
-    def parse_response(self, response):
+    def _parse_response(self, response):
         """ Parse plain-text response. """
         success = {}
         canonicals = {}
@@ -256,7 +256,7 @@ class PlainTextMessage(Message):
             'failed': errors,
         }
 
-    def retry(self, unavailable):
+    def _retry(self, unavailable):
         """ Create new message for given unavailable ID's list. """
         if len(unavailable) != 1:
             raise ValueError("Plain-text messages are unicast.")
@@ -267,10 +267,11 @@ class PlainTextMessage(Message):
 class Result(object):
     """ Result of send operation.
     
-        You should check canonical() for any registration ID's that should be
-        updated. If the whole message or some registration ID's have recoverably
-        failed, then retry() will provide you with new message. You have to wait
-        delay() seconds before attempting a new request.
+        You should check :func:`canonical` for any registration ID's that
+        should be updated. If the whole message or some registration ID's have
+        recoverably failed, then :func:`retry` will provide you with new
+        message. You have to wait :func:`delay` seconds before attempting a new
+        request.
     """
     
     def __init__(self, message, response, backoff):
@@ -293,7 +294,7 @@ class Result(object):
             self._not_registered_ids = []
             self._failed_ids = {}
         else:
-            info = message.parse_response(response)
+            info = message._parse_response(response)
             self._success_ids = info['success']
             self._canonical_ids = info['canonicals']
             self._not_registered_ids = info['not_registered']
@@ -302,67 +303,65 @@ class Result(object):
             # user has to retry anyway, so pre-create
             unavailable = info.get('unavailable', None)
             if unavailable:
-                self._retry_message = message.retry(unavailable)
+                self._retry_message = message._retry(unavailable)
             else:
                 self._retry_message = None
 
     @property
     def success(self):
-        """ Dictionary {registration_id: message_id} of successfully processed registration ID's. """
+        """ Successfully processed registration ID's as mapping ``{registration_id: message_id}``. """
         return self._success_ids
 
     @property
     def canonical(self):
-        """ Dictionary {registration_id: canonical_id}.
+        """ New registration ID's as mapping ``{registration_id: canonical_id}``.
 
-            You have to update registration ID's of your subscribers by replacing
-            them with corresponding canonical ID.
-
-            Read more: http://developer.android.com/google/gcm/adv.html#canonical
+            You have to update registration ID's of your subscribers by
+            replacing them with corresponding canonical ID. Read more `here
+            <http://developer.android.com/google/gcm/adv.html#canonical>`_.
         """
         return self._canonical_ids
 
     @property
     def not_registered(self):
-        """ List all registration ID's that GCM reports as NotRegistered.
+        """ List all registration ID's that GCM reports as ``NotRegistered``.
             You should remove them from your database.
         """
         return self._not_registered_ids
 
     @property
     def failed(self):
-        """ Dictionary {registration_id: error code} for each failed device.
+        """ Unrecoverably failed regisration ID's as mapping ``{registration_id: error code}``.
 
             This method lists devices, that have failed with something else than:
 
-                - Unavailable -- look for retry() instead
-                - NotRegistered -- look for not_registered instead
+                - ``Unavailable`` -- look for :func:`retry` instead.
+                - ``NotRegistered`` -- look for :attr:`not_registered` instead.
 
-            For more info about all possible error codes:
-            http://developer.android.com/google/gcm/gcm.html#error_codes
+            Read more about possible `error codes
+            <http://developer.android.com/google/gcm/gcm.html#error_codes>`_.
         """
         return self._failed_ids
 
     def needs_retry(self):
-        """ True if there are registration ID's that should be retried. """
+        """ True if :func:`retry` will return message. """
         return self._retry_message is not None
 
     def retry(self):
-        """ Construct new message that will retry unicast/multicast to recoverably
-            failed registration ID's. Method returns None if there is nothing to
-            retry. Do not forget to wait for delay() seconds before new attempt.
+        """ Construct new message that will unicast/multicast to remaining
+            recoverably failed registration ID's. Method returns None if there
+            is nothing to retry. Do not forget to wait for :func:`delay`
+            seconds before new attempt.
         """
         return self._retry_message
 
     def delay(self, retry=0):
-        """ Time to wait in seconds before attempting a retry.
+        """ Time to wait in seconds before attempting a retry as a float number.
 
-            Google may black list your server if you do not honor Retry-After hint
-            and not implement exponential backoff.
-
-            This method will return value of Retry-After header if it is provided
-            by GCM. Otherwise, it will return (backoff * 2^retry) with some random
-            shift.
+            This method will return value of Retry-After header if it is
+            provided by GCM. Otherwise, it will return (backoff * 2^retry) with
+            some random shift. Google may black list your server if you do not
+            honor Retry-After hint and do not use exponential backoff.
         """
         if self.retry_after:
             return self.retry_after
@@ -380,17 +379,18 @@ class Result(object):
 
 class GCM(object):
     """ GCM client. """
+
     # Initial backoff in milliseconds
     INITIAL_BACKOFF = 1000
 
     def __init__(self, api_key, url=GCM_URL, backoff=INITIAL_BACKOFF, **options):
-        """ Construct new GCM client.
-        
-            Arguments:
-                api_key (str): Google API key.
-                url (str): GCM server URL.
-                backoff (int): initial backoff in milliseconds
-                options(kwargs): options for :mod:`requests`, such as ``proxies``.
+        """ Create new connection.
+
+            :Arguments:
+                - `api_key` (str): Google API key.
+                - `url` (str): GCM server URL.
+                - `backoff` (int): initial backoff in milliseconds.
+                - `options` (kwargs): options for `requests <http://docs.python-requests.org/en/latest/api/>`_ such as ``proxies``.
         """
         if not api_key:
             raise ValueError("Google API key is required")
@@ -403,28 +403,28 @@ class GCM(object):
     def send(self, message):
         """ Send message.
             
-            The message may contain various options, such as time-to-live. If GCM
-            rejects your request because your options are invalid, then ``ValueError``
-            will be raised. Check error.args[0] for preceice explanation of the problem.
-            In any case, a ValueError means severe problem that you can't retry.
+            The message may contain various options, such as ``time_to_live``.
+            Your request might be rejected, because some of your options might
+            be invalid. In this case a ``ValueError`` with explanation will be
+            raised.
 
-            Arguments:
-                message (:class:`Message`): plain text or JSON message
+            :Arguments:
+                `message` (:class:`Message`): plain text or JSON message.
 
-            Returns:
-                Result instance in case of (partial) success.
+            :Returns:
+                :class:`Result` interpreting the results.
 
-            Raises:
-                ``requests.exceptions.RequestException`` on any network problem.
-                ``ValueError`` GCM rejected request or we rejected response.
-                :class:`GCMAuthenticationError` your API key is invalid.
+            :Raises:
+                - ``requests.exceptions.RequestException`` on any network problem.
+                - ``ValueError`` if your GCM request or response is rejected.
+                - :class:`GCMAuthenticationError` your API key is invalid.
         """
         headers = {
             'Authorization': 'key=%s' % self.api_key,
         }
 
         # construct HTTP message
-        data = message.prepare(headers)
+        data = message._prepare(headers)
 
         # raises requests.exceptions.RequestException on timeouts, connection and
         # other problems.

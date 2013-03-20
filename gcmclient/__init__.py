@@ -1,4 +1,4 @@
-# Copyright 2013 Getlogic BV.
+# Copyright 2013 Getlogic BV, Sardar Yumatov
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ __version__ = "0.1"
 __author__ = "Sardar Yumatov"
 __contact__ = "ja.doma@gmail.com"
 __license__ = "Apache 2.0"
-#__homepage__ = "to read the docs"
-__copyright__ = 'Copyright 2013 Getlogic BV'
+__homepage__ = "https://bitbucket.org/sardarnl/gcm-client/"
+__copyright__ = 'Copyright 2013 Getlogic BV, Sardar Yumatov'
 
 
 from gcmclient.gcm import *
