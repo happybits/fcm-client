@@ -2,6 +2,9 @@ GCM Client |release| documentation.
 ===================================
 Python client for `Google Cloud Messaging (GCM) <http://developer.android.com/google/gcm/index.html>`_.
 
+Check out the client with similar interface for `Apple Push Notification service <https://pypi.python.org/pypi/apns-client/>`_.
+
+
 Requirements
 ------------
 
@@ -28,9 +31,11 @@ following design decisions:
 
 Support
 -------
-GCM client was created by `Sardar Yumatov <mailto:ja.doma@gmail.com>`_, contact
-me if you find any bugs or need help. You can view outstanding issues on the
-`GCM Bitbucket page <https://bitbucket.org/sardarnl/gcm-client/>`_.
+GCM client was created by `Sardar Yumatov <mailto:ja.doma@gmail.com>`_,
+contact me if you find any bugs or need help. Contact `Getlogic
+<http://getlogic.nl>`_ if you need a full-featured push notification service
+for all popular platforms. You can view outstanding issues on the `GCM
+Bitbucket page <https://bitbucket.org/sardarnl/gcm-client/>`_.
 
 Contents:
 

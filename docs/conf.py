@@ -244,4 +244,5 @@ texinfo_documents = [
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
 
+# Use __init__ docs for classes
 autoclass_content = 'init'

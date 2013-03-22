@@ -18,19 +18,18 @@ Usage is straightforward::
 
     from gcmclient import *
 
-    # You work through a proxy? Pass 'proxies' keyword argument, as described
-    # in 'requests' library. Check of other options too.
+    # Pass 'proxies' keyword argument, as described in 'requests' library if you
+    # use proxies. Check other options too.
     gcm = GCM(API_KEY)
 
-    # construct (key => scalar) payload. do not use nested structures.
+    # Construct (key => scalar) payload. do not use nested structures.
     data = {'str': 'string', 'int': 10}
 
-    # unicast or multicast message, read GCM manual about extra options.
+    # Unicast or multicast message, read GCM manual about extra options.
+    # It is probably a good idea to always use JSONMessage, even if you send
+    # a notification to just 1 registration ID.
     unicast = PlainTextMessage("registration_id", data, dry_run=True)
-    multicast = JSONMessage(["registration_id_1", "registration_id_2"],
-                             data,
-                             collapse_key='my.key',
-                             dry_run=True)
+    multicast = JSONMessage(["registration_id_1", "registration_id_2"], data, collapse_key='my.key', dry_run=True)
 
     try:
         # attempt send
@@ -43,7 +42,7 @@ Usage is straightforward::
                 print "Successfully sent %s as %s" % (reg_id, msg_id)
 
             # update your registration ID's
-            for reg_id, new_reg_id res.canonical.items():
+            for reg_id, new_reg_id in res.canonical.items():
                 print "Replacing %s with %s in database" % (reg_id, new_reg_id)
 
             # probably app was uninstalled
@@ -65,17 +64,16 @@ Usage is straightforward::
                 print "Wait or schedule task after %s seconds" % res.delay(retry)
                 # retry += 1 and send retry_msg again
 
-    catch GCMAuthenticationError:
+    except GCMAuthenticationError:
         # stop and fix your settings
         print "Your Google API key is rejected"
-    catch ValueError, e:
+    except ValueError, e:
         # probably your extra options, such as time_to_live,
         # are invalid. Read error message for more info.
         print "Invalid message/option or invalid GCM response"
         print e.args[0]
-    catch Exception:
+    except Exception:
         # your network is down or maybe proxy settings
         # are broken. when problem is resolved, you can
         # retry the whole message.
         print "Something wrong with requests library"
-
