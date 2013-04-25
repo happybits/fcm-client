@@ -21,7 +21,7 @@ except ImportError:
     import omnijson as json
 
 # all you need
-__all__ = ('GCMAuthenticationError', 'JSONMessage', 'PlainTextMessage', 'GCM')
+__all__ = ('GCMAuthenticationError', 'JSONMessage', 'PlainTextMessage', 'GCM', 'Result')
 
 # More info: http://developer.android.com/google/gcm/gcm.html
 #: Default URL to GCM service.
@@ -110,7 +110,7 @@ class Message(object):
 class JSONMessage(Message):
     """ JSON formatted message. """
 
-    def __init__(self, registration_ids=None, data=None, **options):
+    def __init__(self, registration_ids, data=None, **options):
         """ Multicast message, uses JSON format.
 
             :Arguments:
@@ -118,17 +118,22 @@ class JSONMessage(Message):
                 - `data` (dict): key-value pairs of message payload.
                 - `options` (kwargs): GCM options, see :class:`Message` for more info.
         """
+        if not registration_ids:
+            raise ValueError("Empty registration_ids list")
+
         super(JSONMessage, self).__init__(data, options)
-        self.registration_ids = registration_ids or []
+        self._registration_ids = registration_ids
+
+    @property
+    def registration_ids(self):
+        """ Target registration ID's. """
+        return self._registration_ids
 
     def _prepare_payload(self, data=None, options=None):
         """ Prepare message payload. """
         payload = super(JSONMessage, self)._prepare_payload(data=data, options=options)
 
-        if not self.registration_ids:
-            raise ValueError("Empty registration_ids list")
-
-        registration_ids = self.registration_ids
+        registration_ids = self._registration_ids
         if not isinstance(registration_ids, (list, tuple)):
             registration_ids = list(registration_ids)
 
@@ -182,11 +187,43 @@ class JSONMessage(Message):
         """ Create new message for given unavailable ID's list. """
         return JSONMessage(unavailable, self.data, **self.options)
 
+    def __getstate__(self):
+        """ Returns ``dict`` with ``__init__`` arguments.
+
+            If you use ``pickle``, then simply pickle/unpickle the message object.
+            If you use something else, like JSON, then::
+                
+                # obtain state dict from message
+                state = message.__getstate__()
+                # send/store the state
+                # recover state and restore message. you have to pick the right class
+                message_copy = JSONMessage(**state)
+
+            :Returns:
+                `kwargs` for `JSONMessage` constructor.
+        """
+        ret = dict((key, getattr(self, key)) for key in ('registration_ids', 'data'))
+        if self.options:
+            ret.update(self.options)
+
+        return ret
+    
+    def __setstate__(self, state):
+        """ Overwrite message state with given kwargs. """
+        self.options = {}
+        for key, val in state.iteritems():
+            if key == 'registration_ids':
+                self._registration_ids = val
+            elif key == 'data':
+                self.data = val
+            else:
+                self.options[key] = val
+
 
 class PlainTextMessage(Message):
     """ Plain-text unicast message. """
 
-    def __init__(self, registration_id=None, data=None, **options):
+    def __init__(self, registration_id, data=None, **options):
         """ Unicast message, uses plain text format.
             All values in the data payload must be URL encodable scalars.
 
@@ -195,8 +232,16 @@ class PlainTextMessage(Message):
                 - `data` (dict): key-value pairs of message payload.
                 - `options` (kwargs): GCM options, see :class:`Message` for more info.
         """
+        if not registration_id:
+            raise ValueError("registration_id is required")
+
         super(PlainTextMessage, self).__init__(data, options)
-        self.registration_id = registration_id
+        self._registration_id = registration_id
+
+    @property
+    def registration_id(self):
+        """ Target registration ID. """
+        return self._registration_id
 
     def _prepare_data(self, payload, data=None):
         """ Prepare data key-value pairs for URL encoding. """
@@ -208,15 +253,10 @@ class PlainTextMessage(Message):
                     # does not support complex values.
                     payload['data.%s' % k] = v
 
-    def _prepare_payload(self, registration_id=None, data=None, options=None):
+    def _prepare_payload(self, data=None, options=None):
         """ Prepare message payload. """
         payload = super(PlainTextMessage, self)._prepare_payload(data=data, options=options)
-
-        registration_id = registration_id or self.registration_id
-        if not registration_id:
-            raise ValueError("registration_id is required")
-
-        payload['registration_id'] = registration_id
+        payload['registration_id'] = self.registration_id
         return payload
 
     def _parse_response(self, response):
@@ -263,6 +303,37 @@ class PlainTextMessage(Message):
 
         return PlainTextMessage(unavailable[0], self.data, **self.options)
 
+    def __getstate__(self):
+        """ Returns ``dict`` with ``__init__`` arguments.
+
+            If you use ``pickle``, then simply pickle/unpickle the message object.
+            If you use something else, like JSON, then::
+                
+                # obtain state dict from message
+                state = message.__getstate__()
+                # send/store the state
+                # recover state and restore message. you have to pick the right class
+                message_copy = PlainTextMessage(**state)
+
+            :Returns:
+                `kwargs` for `PlainTextMessage` constructor.
+        """
+        ret = dict((key, getattr(self, key)) for key in ('registration_id', 'data'))
+        if self.options:
+            ret.update(self.options)
+
+        return ret
+    
+    def __setstate__(self, state):
+        """ Overwrite message state with given kwargs. """
+        self.options = {}
+        for key, val in state.iteritems():
+            if key == 'registration_id':
+                self._registration_id = val
+            elif key == 'data':
+                self.data = val
+            else:
+                self.options[key] = val
 
 class Result(object):
     """ Result of send operation.

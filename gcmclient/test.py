@@ -1,5 +1,10 @@
+if __name__ == '__main__':
+    import os.path, sys
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import unittest
 import json
+import pickle
 from gcmclient.gcm import *
 
 
@@ -64,6 +69,19 @@ class GCMClientTest(unittest.TestCase):
         self.assertEqual(msg2.options, msg.options)
         self.assertEqual(msg2.data, msg.data)
 
+        # pickle
+        pmsg = pickle.dumps(msg)
+        pmsg = pickle.loads(pmsg)
+        self.assertEqual(pmsg.registration_id, msg.registration_id)
+        self.assertEqual(pmsg.options, msg.options)
+        self.assertEqual(pmsg.data, msg.data)
+
+        pstate = msg.__getstate__()
+        pmsg = PlainTextMessage(**pstate)
+        self.assertEqual(pmsg.registration_id, msg.registration_id)
+        self.assertEqual(pmsg.options, msg.options)
+        self.assertEqual(pmsg.data, msg.data)
+
     def test_json_message(self):
         msg = JSONMessage(['A', 'B', 'C', 'D', 'E'],
                 {
@@ -127,6 +145,18 @@ class GCMClientTest(unittest.TestCase):
         self.assertEqual(msg2.options, msg.options)
         self.assertEqual(msg2.data, msg.data)
 
+        # pickle
+        pmsg = pickle.dumps(msg)
+        pmsg = pickle.loads(pmsg)
+        self.assertEqual(pmsg.registration_ids, msg.registration_ids)
+        self.assertEqual(pmsg.options, msg.options)
+        self.assertEqual(pmsg.data, msg.data)
+
+        pstate = msg.__getstate__()
+        pmsg = JSONMessage(**pstate)
+        self.assertEqual(pmsg.registration_ids, msg.registration_ids)
+        self.assertEqual(pmsg.options, msg.options)
+        self.assertEqual(pmsg.data, msg.data)
 
 if __name__ == '__main__':
     unittest.main()
