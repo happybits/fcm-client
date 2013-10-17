@@ -79,7 +79,7 @@ class Message(object):
             if val is not None:
                 val = flt(val)
 
-            if val:
+            if val or isinstance(val, (int, long)):
                 payload[opt] = val
 
         self._prepare_data(payload, data=data)
