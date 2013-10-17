@@ -1,0 +1,3 @@
+2013-10-17  Sardar Yumatov  <ja.doma@gmail.com>
+    * version 0.1.4
+    * gcmclient/gcm.py: time_to_live = 0 is now a valid option.
