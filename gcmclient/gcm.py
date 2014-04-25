@@ -151,6 +151,10 @@ class JSONMessage(Message):
         """ Parse JSON response. """
         if not isinstance(response, six.string_types):
             # requests.Response object
+            #response = response.content
+            # Encoding issue, on python 3.3, when deserializing the response.content (bytes).
+            # Deserializing the text worked. A better solution will be to solve the encoding
+            # problem.
             response = response.text
 
         data = json.loads(response) # raises ValueError
