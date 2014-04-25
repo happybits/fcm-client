@@ -14,6 +14,7 @@
 
 import random
 import requests
+import six
 
 try:
     import json
@@ -35,10 +36,10 @@ class Message(object):
     """ Base message class. """
     # recognized options, read GCM manual for more info.
     OPTIONS = {
-        'collapse_key': lambda v: v if isinstance(v, basestring) else str(v),
+        'collapse_key': lambda v: v if isinstance(v, six.string_types) else str(v),
         'time_to_live': int,
         'delay_while_idle': bool,
-        'restricted_package_name': lambda v: v if isinstance(v, basestring) else str(v),
+        'restricted_package_name': lambda v: v if isinstance(v, six.string_types) else str(v),
         'dry_run': bool,
     }
 
@@ -74,12 +75,12 @@ class Message(object):
         payload = {}
 
         # set options
-        for opt, flt in self.OPTIONS.iteritems():
+        for opt, flt in six.iteritems(self.OPTIONS):
             val = options.get(opt, None)
             if val is not None:
                 val = flt(val)
 
-            if val or isinstance(val, (int, long)):
+            if val or isinstance(val, (int, six.integer_types)):
                 payload[opt] = val
 
         self._prepare_data(payload, data=data)
@@ -148,7 +149,7 @@ class JSONMessage(Message):
 
     def _parse_response(self, response):
         """ Parse JSON response. """
-        if not isinstance(response, basestring):
+        if not isinstance(response, six.string_types):
             # requests.Response object
             response = response.content
 
@@ -211,7 +212,7 @@ class JSONMessage(Message):
     def __setstate__(self, state):
         """ Overwrite message state with given kwargs. """
         self.options = {}
-        for key, val in state.iteritems():
+        for key, val in six.iteritems(state):
             if key == 'registration_ids':
                 self._registration_ids = val
             elif key == 'data':
@@ -247,7 +248,7 @@ class PlainTextMessage(Message):
         """ Prepare data key-value pairs for URL encoding. """
         data = data or self.data
         if data:
-            for k,v in data.iteritems():
+            for k,v in six.iteritems(data):
                 if v is not None:
                     # FIXME: maybe we should check here if v is scalar. URL encoding
                     # does not support complex values.
@@ -266,7 +267,7 @@ class PlainTextMessage(Message):
         not_registered = []
         errors = {}
 
-        if not isinstance(response, basestring):
+        if not isinstance(response, six.string_types):
             # requests.Response object
             response = response.content
 
@@ -327,7 +328,7 @@ class PlainTextMessage(Message):
     def __setstate__(self, state):
         """ Overwrite message state with given kwargs. """
         self.options = {}
-        for key, val in state.iteritems():
+        for key, val in six.iteritems(state):
             if key == 'registration_id':
                 self._registration_id = val
             elif key == 'data':
