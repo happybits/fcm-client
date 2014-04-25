@@ -151,7 +151,7 @@ class JSONMessage(Message):
         """ Parse JSON response. """
         if not isinstance(response, six.string_types):
             # requests.Response object
-            response = response.content
+            response = response.text
 
         data = json.loads(response) # raises ValueError
         if 'results' not in data or len(data.get('results')) != len(self.registration_ids):
