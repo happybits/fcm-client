@@ -84,34 +84,35 @@ class GCMClientTest(unittest.TestCase):
 
     def test_json_message(self):
         msg = JSONMessage(['A', 'B', 'C', 'D', 'E'],
-                {
-                    'str': 'string',
-                    'int': 90,
-                    'bool': True,
-                }, collapse_key='collapse.key',
-                   time_to_live=90,
-                   delay_while_idle=True,
-                   dry_run=True)
+            {
+                'str': 'string',
+                'int': 90,
+                'bool': True,
+            }, 
+            collapse_key='collapse.key',
+            time_to_live=90,
+            delay_while_idle=True,
+            dry_run=True)
 
         headers = {}
         data = msg._prepare(headers)
 
         # will be URL encoded by requests
-        ex_data = json.dumps({'collapse_key': 'collapse.key',
-                    'time_to_live': 90,
-                    'delay_while_idle': True,
-                    'dry_run': True,
-                    'registration_ids': ['A', 'B', 'C', 'D', 'E'],
-                    'data': {
-                        'str': 'string',
-                        'int': 90,
-                        'bool': True,
-                    }
-                   })
+        ex_data = {
+            'collapse_key': 'collapse.key',
+            'delay_while_idle': True,
+            'registration_ids': ['A', 'B', 'C', 'D', 'E'],
+            'data': {
+                'str': 'string',
+                'int': 90,
+                'bool': True,
+            },
+            'time_to_live': 90,
+            'dry_run': True
+        }
 
         ex_headers = {'Content-Type': 'application/json'}
-
-        self.assertEqual(data, ex_data)
+        self.assertEqual(json.loads(data), ex_data)
         self.assertEqual(headers, ex_headers)
 
         # responses
