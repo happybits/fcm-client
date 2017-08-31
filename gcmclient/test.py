@@ -92,7 +92,8 @@ class GCMClientTest(unittest.TestCase):
             collapse_key='collapse.key',
             time_to_live=90,
             delay_while_idle=True,
-            dry_run=True)
+            dry_run=True,
+            priority='high')
 
         headers = {}
         data = msg._prepare(headers)
@@ -108,7 +109,8 @@ class GCMClientTest(unittest.TestCase):
                 'bool': True,
             },
             'time_to_live': 90,
-            'dry_run': True
+            'dry_run': True,
+            'priority': 'high',
         }
 
         ex_headers = {'Content-Type': 'application/json'}

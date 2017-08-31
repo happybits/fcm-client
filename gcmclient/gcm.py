@@ -37,6 +37,7 @@ class Message(object):
     # recognized options, read GCM manual for more info.
     OPTIONS = {
         'collapse_key': lambda v: v if isinstance(v, six.string_types) else str(v),
+        'priority': lambda v: v if isinstance(v, six.string_types) else str(v),
         'time_to_live': int,
         'delay_while_idle': bool,
         'restricted_package_name': lambda v: v if isinstance(v, six.string_types) else str(v),

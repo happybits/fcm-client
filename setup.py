@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name='gcm-client',
-    version='0.1.4',
+    version='0.1.5',
     author='Sardar Yumatov',
     author_email='ja.doma@gmail.com',
     url='https://bitbucket.org/sardarnl/gcm-client',
