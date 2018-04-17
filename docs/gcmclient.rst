@@ -16,11 +16,6 @@ built on top of `requests <http://docs.python-requests.org/en/latest/>`_ library
 .. autoclass:: JSONMessage
     :members: registration_ids, __getstate__
 
-.. autoclass:: PlainTextMessage
-    :members: registration_id, __getstate__
-
-.. autoclass:: Message
-
 .. autoclass:: Result
     :members: success, canonical, not_registered, failed, needs_retry, retry, delay, backoff
 

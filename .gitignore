@@ -1,1 +1,7 @@
 .*
+
+# built package
+/dist
+
+# compiled docs
+/docs/_build

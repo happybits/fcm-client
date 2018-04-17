@@ -5,7 +5,7 @@ except ImportError:
 
 setup(
     name='gcm-client',
-    version='0.1.5',
+    version='0.2.0',
     author='Sardar Yumatov',
     author_email='ja.doma@gmail.com',
     url='https://bitbucket.org/sardarnl/gcm-client',
@@ -14,10 +14,10 @@ setup(
     packages=['gcmclient'],
     license="Apache 2.0",
     keywords='gcm push notification google cloud messaging android',
-    install_requires=['requests'],
-    classifiers = [ 'Development Status :: 4 - Beta',
-                    'Intended Audience :: Developers',
-                    'License :: OSI Approved :: Apache Software License',
-                    'Programming Language :: Python',
-                    'Topic :: Software Development :: Libraries :: Python Modules']
+    install_requires=['requests', 'six'],
+    classifiers=['Development Status :: 4 - Beta',
+                 'Intended Audience :: Developers',
+                 'License :: OSI Approved :: Apache Software License',
+                 'Programming Language :: Python',
+                 'Topic :: Software Development :: Libraries :: Python Modules']
 )

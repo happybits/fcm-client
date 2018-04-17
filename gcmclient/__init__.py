@@ -14,12 +14,11 @@
 
 
 __title__ = 'GCM client'
-__version__ = "0.1"
+__version__ = "0.2.0"
 __author__ = "Sardar Yumatov"
 __contact__ = "ja.doma@gmail.com"
 __license__ = "Apache 2.0"
 __homepage__ = "https://bitbucket.org/sardarnl/gcm-client/"
 __copyright__ = 'Copyright 2013 Getlogic BV, Sardar Yumatov'
-
 
 from gcmclient.gcm import *
