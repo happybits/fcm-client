@@ -333,22 +333,24 @@ class Result(object):
 
 
 class FCM(object):
-    """ FCM client. """
+    """
+    FCM
+
+    A class for communicating with firebase.
+    """
 
     # Initial backoff in milliseconds
     INITIAL_BACKOFF = 1000
 
     def __init__(self, api_key, url=FCM_URL, backoff=INITIAL_BACKOFF,
                  **options):
-        """ Create new connection.
+        """
+        Create new connection.
 
-            :Arguments:
-                - `api_key` (str): Google API key.
-                - `url` (str): FCM server URL.
-                - `backoff` (int): initial backoff in milliseconds.
-                - `options` (kwargs): options for `requests
-                <http://docs.python-requests.org/en/latest/api/>`_ such as
-                ``proxies``.
+        :param api_key: (str) Google API key
+        :param url: (str) FCM server URL.
+        :param backoff: (int) initial backoff in milliseconds.
+        :param options: (kwargs) options for `requests
         """
         if not api_key:
             raise ValueError("Google API key is required")
@@ -374,14 +376,12 @@ class FCM(object):
             :class:`Result` interpreting the results.
 
         :Raises:
-            - ``requests.exceptions.RequestException`` on any network
-            problem.
+            - ``requests.exceptions.RequestException`` on any network problem.
             - ``ValueError`` if your FCM request or response is rejected.
             - :class:`FCMAuthenticationError` your API key is invalid.
         """
         # raises requests.exceptions.RequestException on timeouts, connection
-        #  and
-        # other problems.
+        # and other problems.
         response = requests.post(
             self.url,
             json=message.payload,

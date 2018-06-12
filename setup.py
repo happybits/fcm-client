@@ -14,12 +14,12 @@ ROOTDIR = path.abspath(os.path.dirname(__file__))
 with open(os.path.join(ROOTDIR, 'README.rst')) as f:
     readme = f.read()
 
-with open(os.path.join(ROOTDIR, 'fcmclient', 'VERSION'), 'r') as f:
+with open(os.path.join(ROOTDIR, PKGNAME, 'VERSION')) as f:
     version = str(f.read().strip())
 
 setup(
     name=NAME,
-    version='0.2.0',
+    version=version,
     author='John Loehrer',
     author_email='72squared@gmail.com',
     url='https://github.com/happybits/%s' % NAME,

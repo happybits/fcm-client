@@ -7,7 +7,7 @@ built on top of `requests <http://docs.python-requests.org/en/latest/>`_ library
 :mod:`fcmclient` Package
 -------------------------
 
-.. automodule:: fcmclient.fcm
+.. automodule:: fcmclient.api
     :members: FCM_URL
 
 .. autoclass:: FCM

@@ -12,6 +12,7 @@ help:
 	@echo "  sdist           make a source distribution"
 	@echo "  bdist           make an egg distribution"
 	@echo "  install         install package"
+	@echo "  documentation   build documentation"
 	@echo "  publish         publish package to pypi"
 	@echo " *** CI Commands ***"
 	@echo "  test            starts/activates the test cluster nodes and runs tox test"
@@ -33,7 +34,12 @@ cleanmeta:
 cleantox:
 	-rm -rf .tox/
 
-cleanall: clean cleancov cleanmeta cleantox
+
+cleandocs:
+	-rm -rf docs/_build
+
+
+cleanall: clean cleancov cleanmeta cleantox cleandocs
 
 sdist: cleanmeta
 	python setup.py sdist
@@ -46,6 +52,10 @@ install:
 
 publish:
 	./publish.sh
+
+documentation:
+	pip install sphinx -q
+	sphinx-build -M html "./docs" "./docs/_build"
 
 local:
 	python setup.py build_ext --inplace
