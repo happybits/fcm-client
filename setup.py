@@ -1,5 +1,6 @@
 import os
 from os import path
+
 try:
     from setuptools import setup
 except ImportError:
@@ -29,10 +30,13 @@ setup(
     license="Apache 2.0",
     keywords='fcm push notification google cloud messaging android',
     install_requires=['requests', 'six'],
-    entry_points={'console_scripts': ['%s = %s.cli:main' % (PKGNAME, PKGNAME)]},
-    classifiers=['Development Status :: 4 - Beta',
-                 'Intended Audience :: Developers',
-                 'License :: OSI Approved :: Apache Software License',
-                 'Programming Language :: Python',
-                 'Topic :: Software Development :: Libraries :: Python Modules']
+    entry_points={
+        'console_scripts': ['%s = %s.cli:main' % (PKGNAME, PKGNAME)]
+    },
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python',
+        'Topic :: Software Development :: Libraries :: Python Modules']
 )
