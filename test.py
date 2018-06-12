@@ -1,11 +1,10 @@
 import unittest
-import gcmclient
 import requests_mock
 import string
 import random
 import pickle
-from gcmclient.gcm import *
-
+import fcmclient
+import fcmclient.api
 
 API_KEY_CHARSET = string.ascii_letters + string.digits
 REG_ID_CHARSET = string.ascii_letters + string.digits + '-_/'
@@ -19,7 +18,7 @@ def generate_api_key():
     return ''.join([random.choice(API_KEY_CHARSET) for _ in range(40)])
 
 
-class GcmClientTestCase(unittest.TestCase):
+class FCMClientTestCase(unittest.TestCase):
 
     def setUp(self):
         self.api_key = generate_api_key()
@@ -28,10 +27,8 @@ class GcmClientTestCase(unittest.TestCase):
     def tearDown(self):
         pass
 
-
     def test(self):
-
-        message = gcmclient.JSONMessage(
+        message = fcmclient.JSONMessage(
             registration_ids=[self.reg_id],
             data={
                 'foo': 'bar'
@@ -43,7 +40,6 @@ class GcmClientTestCase(unittest.TestCase):
         self.assertEqual(res.failed, {})
         self.assertEqual(res.retry(), None)
 
-
     def invoke(self, message, json_response=None, status_code=200):
         reg_ids = message.registration_ids
         if json_response is None:
@@ -51,30 +47,35 @@ class GcmClientTestCase(unittest.TestCase):
                 "multicast_id": len(reg_ids),
                 "success": len(reg_ids),
                 "canonical_ids": 0,
-                "results": [{"message_id": "1:%s" % i} for i in range(len(reg_ids))]
+                "results": [{"message_id": "1:%s" % i} for i in
+                            range(len(reg_ids))]
             }
 
         with requests_mock.Mocker() as m:
             m.post(
-                gcmclient.gcm.GCM_URL,
+                fcmclient.api.FCM_URL,
                 json=json_response,
                 status_code=status_code
             )
-            return gcmclient.GCM(self.api_key).send(message)
+            return fcmclient.FCM(self.api_key).send(message)
 
 
 class JsonMessageTestCase(unittest.TestCase):
     """ API tests. """
 
     def setUp(self):
-        self.gcm = GCM('my_api_key')
+        self.fcm = fcmclient.FCM('my_api_key')
 
     def create_response(self, **kwargs):
-        req = requests_mock.adapter._RequestObjectProxy._create('post', gcmclient.gcm.GCM_URL, {})
+        req = requests_mock.adapter._RequestObjectProxy._create(
+            'post',
+            fcmclient.api.FCM_URL,
+            {})
         return requests_mock.create_response(req, **kwargs)
 
     def test(self):
-        msg = JSONMessage(['A', 'B', 'C', 'D', 'E'],
+        msg = fcmclient.JSONMessage(
+            ['A', 'B', 'C', 'D', 'E'],
             {
                 'str': 'string',
                 'int': 90,
@@ -106,29 +107,29 @@ class JsonMessageTestCase(unittest.TestCase):
         self.assertEqual(data, ex_data)
 
         # responses
-        response = { "multicast_id": 1,
-          "success": 2,
-          "failure": 3,
-          "canonical_ids": 1,
-          "results": [
-            { "message_id": "1:0408" },
-            { "error": "Unavailable" },
-            { "error": "InvalidRegistration" },
-            { "message_id": "1:2342", "registration_id": "32" },
-            { "error": "NotRegistered"}
-          ]
-        }
+        response = {"multicast_id": 1,
+                    "success": 2,
+                    "failure": 3,
+                    "canonical_ids": 1,
+                    "results": [
+                        {"message_id": "1:0408"},
+                        {"error": "Unavailable"},
+                        {"error": "InvalidRegistration"},
+                        {"message_id": "1:2342", "registration_id": "32"},
+                        {"error": "NotRegistered"}
+                    ]
+                    }
 
         http_response = self.create_response(json=response, status_code=200)
-        rsp = Result(msg, http_response, 1000)
-        ex_rsp = {
-            'multicast_id': 1,
-            'canonicals': {'D': u'32'},
-            'failed': {'C': u'InvalidRegistration'},
-            'not_registered': ['E'],
-            'success': {'A': u'1:0408', 'D': u'1:2342'},
-            'unavailable': ['B']
-        }
+        rsp = fcmclient.Result(msg, http_response, 1000)
+        # ex_rsp = {
+        #     'multicast_id': 1,
+        #     'canonicals': {'D': u'32'},
+        #     'failed': {'C': u'InvalidRegistration'},
+        #     'not_registered': ['E'],
+        #     'success': {'A': u'1:0408', 'D': u'1:2342'},
+        #     'unavailable': ['B']
+        # }
         self.assertEqual(rsp.canonical, {'D': u'32'})
         self.assertEqual(rsp.failed, {'C': u'InvalidRegistration'})
         self.assertEqual(rsp.message, msg)
@@ -148,7 +149,7 @@ class JsonMessageTestCase(unittest.TestCase):
         self.assertEqual(pmsg.data, msg.data)
 
         pstate = msg.__getstate__()
-        pmsg = JSONMessage(**pstate)
+        pmsg = fcmclient.JSONMessage(**pstate)
         self.assertEqual(pmsg.registration_ids, msg.registration_ids)
         self.assertEqual(pmsg.options, msg.options)
         self.assertEqual(pmsg.data, msg.data)

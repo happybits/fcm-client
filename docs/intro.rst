@@ -1,26 +1,17 @@
 Getting Started
 ===============
-You need Google API key in order to consume Google's services. You can obtain
-such key from the `developers console
-<https://code.google.com/apis/console/>`_.  Open *Services* section and switch
-on *Google Cloud Messaging for Android*.  Then open *API Access* section and
-create *Key for server apps* if you haven't any.  The *API key* string is what
-you need. Ensure IP filter is disabled or your server IP is listed.
-
-Consult `Google Cloud Messaging for Android
-<http://developer.android.com/google/gcm/gcm.html#send-msg>`_ for all options
-that you might pass with each message. There you will also find all error
-codes, such as ``MismatchSenderId``, that can be returned by GCM.
+Follow the instructions here for how to set up `firebase cloud messaging
+<https://firebase.google.com/docs/cloud-messaging/android/first-message>`_.
 
 Usage
 -----
 Usage is straightforward::
 
-    from gcmclient import *
+    from fcmclient import *
 
     # Pass 'proxies' keyword argument, as described in 'requests' library if you
     # use proxies. Check other options too.
-    gcm = GCM(API_KEY)
+    fcm = FCM(API_KEY)
 
     # Construct (key => scalar) payload. do not use nested structures.
     data = {'str': 'string', 'int': 10}
@@ -29,7 +20,7 @@ Usage is straightforward::
 
     try:
         # attempt send
-        res = gcm.send(multicast)
+        res = fcm.send(multicast)
 
         # nothing to do on success
         for reg_id, msg_id in res.success.items():
@@ -44,7 +35,7 @@ Usage is straightforward::
             print "Removing %s from database" % reg_id
 
         # unrecoverably failed, these ID's will not be retried
-        # consult GCM manual for all error codes
+        # consult FCM manual for all error codes
         for reg_id, err_code in res.failed.items():
             print "Removing %s because %s" % (reg_id, err_code)
 
@@ -58,13 +49,13 @@ Usage is straightforward::
             print "Wait or schedule task after %s seconds" % res.delay(retry)
             # retry += 1 and send retry_msg again
 
-    except GCMAuthenticationError:
+    except FCMAuthenticationError:
         # stop and fix your settings
         print "Your Google API key is rejected"
     except ValueError, e:
         # probably your extra options, such as time_to_live,
         # are invalid. Read error message for more info.
-        print "Invalid message/option or invalid GCM response"
+        print "Invalid message/option or invalid FCM response"
         print e.args[0]
     except Exception:
         # your network is down or maybe proxy settings

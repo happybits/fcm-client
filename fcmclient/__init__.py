@@ -1,4 +1,5 @@
-# Copyright 2013 Getlogic BV, Sardar Yumatov
+# Copyright 2017 Joya Communications, John Loehrer
+# Based on work by Sardar Yumatov
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-__title__ = 'GCM client'
-__version__ = "0.2.0"
-__author__ = "Sardar Yumatov"
-__contact__ = "ja.doma@gmail.com"
+__title__ = 'FCM client'
+__author__ = "John Loehrer"
+__contact__ = "72squared@gmail.com"
 __license__ = "Apache 2.0"
-__homepage__ = "https://bitbucket.org/sardarnl/gcm-client/"
-__copyright__ = 'Copyright 2013 Getlogic BV, Sardar Yumatov'
+__homepage__ = "https://github/happybits/fcm-client/"
+__copyright__ = 'Copyright 2018 Joya Communications, John Loehrer'
 
-from gcmclient.gcm import *
+from .version import __version__  # noqa
+from .api import *  # noqa

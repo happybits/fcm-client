@@ -2,6 +2,7 @@
 
 # built package
 /dist
-
+/build
+/*.egg-info
 # compiled docs
 /docs/_build

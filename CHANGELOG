@@ -1,3 +1,7 @@
+2018-06-12 John Loehrer <72squared@gmail.com>
+    * version 0.2.0
+    * migration to firebase API.
+
 2013-10-17  Sardar Yumatov  <ja.doma@gmail.com>
     * version 0.1.4
-    * gcmclient/gcm.py: time_to_live = 0 is now a valid option.
+    * fcmclient/fcm.py: time_to_live = 0 is now a valid option.

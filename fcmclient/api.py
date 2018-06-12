@@ -16,36 +16,31 @@ import random
 import requests
 import six
 
-try:
-    import json
-except ImportError:
-    import omnijson as json
-
 # all you need
-__all__ = ('GCMAuthenticationError', 'JSONMessage', 'GCM', 'Result')
+__all__ = ('FCMAuthenticationError', 'JSONMessage', 'FCM', 'Result')
 
-# More info: http://developer.android.com/google/gcm/gcm.html
-#: Default URL to GCM service.
-GCM_URL = 'https://android.googleapis.com/gcm/send'
+# More info: http://developer.android.com/google/fcm/fcm.html
+#: Default URL to FCM service.
+FCM_URL = 'https://android.googleapis.com/fcm/send'
 
 
-class GCMAuthenticationError(ValueError):
+class FCMAuthenticationError(ValueError):
     """ Raised if your Google API key is rejected. """
     pass
 
 
 class JSONMessage(object):
     """ Base message class. """
-    # recognized options, read GCM manual for more info.
+    # recognized options, read FCM manual for more info.
     OPTIONS = {
-        'collapse_key': lambda v: v if isinstance(v, six.string_types) else str(
-            v),
-        'priority': lambda v: v if isinstance(v, six.string_types) else str(v),
+        'collapse_key': lambda v:
+            v if isinstance(v, six.string_types) else str(v),
+        'priority': lambda v:
+            v if isinstance(v, six.string_types) else str(v),
         'time_to_live': int,
         'delay_while_idle': bool,
-        'restricted_package_name': lambda v: v if isinstance(v,
-                                                             six.string_types) else str(
-            v),
+        'restricted_package_name': lambda v:
+            v if isinstance(v, six.string_types) else str(v),
         'dry_run': bool,
     }
 
@@ -59,16 +54,17 @@ class JSONMessage(object):
                 - `data` (dict): key-value pairs, payload of this message.
                 - `message_title` (str): a title for the notification
                 - `message_body` (str): the message body of the alert.
-                - `options` (dict): GCM options.
+                - `options` (dict): FCM options.
 
-            Refer to `GCM <http://developer.android.com/google/gcm/gcm.html
+            Refer to `FCM <http://developer.android.com/google/fcm/fcm.html
             #request>`_
             for more explanation on available options.
 
             :Options:
                 - `collapse_key` (str): collapse key/bucket.
                 - `time_to_live` (int): message TTL in seconds.
-                - `delay_while_idle` (bool): hold message if device is off-line.
+                - `delay_while_idle` (bool): hold message if
+                   device is off-line.
                 - `restricted_package_name` (str): declare package name.
                 - `dry_run` (bool): pretend sending message to devices.
         """
@@ -145,21 +141,22 @@ class JSONMessage(object):
             payload=payload)
 
     def __getstate__(self):
-        """ Returns ``dict`` with ``__init__`` arguments.
+        """
+        Returns ``dict`` with ``__init__`` arguments.
 
-            If you use ``pickle``, then simply pickle/unpickle the message
-            object.
-            If you use something else, like JSON, then::
-                
-                # obtain state dict from message
-                state = message.__getstate__()
-                # send/store the state
-                # recover state and restore message. you have to pick the
-                right class
-                message_copy = JSONMessage(**state)
+        If you use ``pickle``, then simply pickle/unpickle the message
+        object.
+        If you use something else, like JSON, then::
 
-            :Returns:
-                `kwargs` for `JSONMessage` constructor.
+            # obtain state dict from message
+            state = message.__getstate__()
+            # send/store the state
+            # recover state and restore message. you have to pick the
+            right class
+            message_copy = JSONMessage(**state)
+
+        :Returns:
+            `kwargs` for `JSONMessage` constructor.
         """
         return self.payload
 
@@ -169,13 +166,13 @@ class JSONMessage(object):
 
 
 class Result(object):
-    """ Result of send operation.
-    
-        You should check :func:`canonical` for any registration ID's that
-        should be updated. If the whole message or some registration ID's have
-        recoverably failed, then :func:`retry` will provide you with new
-        message. You have to wait :func:`delay` seconds before attempting a new
-        request.
+    """
+    Result of send operation.
+    You should check :func:`canonical` for any registration ID's that
+    should be updated. If the whole message or some registration ID's have
+    recoverably failed, then :func:`retry` will provide you with new
+    message. You have to wait :func:`delay` seconds before attempting a new
+    request.
     """
 
     def __init__(self, message, response, backoff):
@@ -186,11 +183,11 @@ class Result(object):
             raise ValueError(response.content)
 
         if response.status_code == 401:
-            raise GCMAuthenticationError("Authentication Error")
+            raise FCMAuthenticationError("Authentication Error")
 
         # either request is accepted or rejected with possibility for retry
-        if response.status_code != 200 and (
-            response.status_code < 500 or response.status_code > 599):
+        not_500 = response.status_code < 500 or response.status_code > 599
+        if response.status_code != 200 and not_500:
             raise RuntimeError(
                 "Unknown status code: {0}".format(response.status_code))
 
@@ -230,9 +227,8 @@ class Result(object):
     def _parse_response(self, data):
         """ Parse JSON response. """
         registration_ids = self.message.registration_ids
-
-        if 'results' not in data or len(data.get('results')) != len(
-            registration_ids):
+        len_reg_ids = len(registration_ids)
+        if 'results' not in data or len(data.get('results')) != len_reg_ids:
             raise ValueError("Invalid response")
 
         success = {}
@@ -246,8 +242,7 @@ class Result(object):
                 if 'registration_id' in res:
                     canonicals[reg_id] = res['registration_id']
             else:
-                if res['error'] == "Unavailable" or res[
-                    'error'] == "InternalServerError":
+                if res['error'] in ["Unavailable", "InternalServerError"]:
                     unavailable.append(reg_id)
                 elif res['error'] == "NotRegistered":
                     not_registered.append(reg_id)
@@ -276,13 +271,13 @@ class Result(object):
 
             You have to update registration ID's of your subscribers by
             replacing them with corresponding canonical ID. Read more `here
-            <http://developer.android.com/google/gcm/adv.html#canonical>`_.
+            <http://developer.android.com/google/fcm/adv.html#canonical>`_.
         """
         return self._canonical_ids
 
     @property
     def not_registered(self):
-        """ List all registration ID's that GCM reports as ``NotRegistered``.
+        """ List all registration ID's that FCM reports as ``NotRegistered``.
             You should remove them from your database.
         """
         return self._not_registered_ids
@@ -299,7 +294,7 @@ class Result(object):
                 - ``NotRegistered`` -- look for :attr:`not_registered` instead.
 
             Read more about possible `error codes
-            <http://developer.android.com/google/gcm/gcm.html#error_codes>`_.
+            <http://developer.android.com/google/fcm/fcm.html#error_codes>`_.
         """
         return self._failed_ids
 
@@ -319,7 +314,7 @@ class Result(object):
         """ Time to wait in seconds before attempting a retry as a float number.
 
             This method will return value of Retry-After header if it is
-            provided by GCM. Otherwise, it will return (backoff * 2^retry) with
+            provided by FCM. Otherwise, it will return (backoff * 2^retry) with
             some random shift. Google may black list your server if you do not
             honor Retry-After hint and do not use exponential backoff.
         """
@@ -337,19 +332,19 @@ class Result(object):
         return (base + self._random.randrange(self._backoff)) / 1000.0
 
 
-class GCM(object):
-    """ GCM client. """
+class FCM(object):
+    """ FCM client. """
 
     # Initial backoff in milliseconds
     INITIAL_BACKOFF = 1000
 
-    def __init__(self, api_key, url=GCM_URL, backoff=INITIAL_BACKOFF,
+    def __init__(self, api_key, url=FCM_URL, backoff=INITIAL_BACKOFF,
                  **options):
         """ Create new connection.
 
             :Arguments:
                 - `api_key` (str): Google API key.
-                - `url` (str): GCM server URL.
+                - `url` (str): FCM server URL.
                 - `backoff` (int): initial backoff in milliseconds.
                 - `options` (kwargs): options for `requests
                 <http://docs.python-requests.org/en/latest/api/>`_ such as
@@ -364,24 +359,25 @@ class GCM(object):
         self.requests_options = options
 
     def send(self, message):
-        """ Send message.
-            
-            The message may contain various options, such as ``time_to_live``.
-            Your request might be rejected, because some of your options might
-            be invalid. In this case a ``ValueError`` with explanation will be
-            raised.
+        """
+        Send message.
 
-            :Arguments:
-                `message` (:class:`Message`): plain text or JSON message.
+        The message may contain various options, such as ``time_to_live``.
+        Your request might be rejected, because some of your options might
+        be invalid. In this case a ``ValueError`` with explanation will be
+        raised.
 
-            :Returns:
-                :class:`Result` interpreting the results.
+        :Arguments:
+            `message` (:class:`Message`): plain text or JSON message.
 
-            :Raises:
-                - ``requests.exceptions.RequestException`` on any network
-                problem.
-                - ``ValueError`` if your GCM request or response is rejected.
-                - :class:`GCMAuthenticationError` your API key is invalid.
+        :Returns:
+            :class:`Result` interpreting the results.
+
+        :Raises:
+            - ``requests.exceptions.RequestException`` on any network
+            problem.
+            - ``ValueError`` if your FCM request or response is rejected.
+            - :class:`FCMAuthenticationError` your API key is invalid.
         """
         # raises requests.exceptions.RequestException on timeouts, connection
         #  and

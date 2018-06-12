@@ -1,4 +1,5 @@
 coverage
+pytest
 tox
 flake8
 requests-mock==1.3.0

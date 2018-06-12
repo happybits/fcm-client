@@ -1,16 +1,16 @@
-gcmclient Package
+fcmclient Package
 =================
 
-`Google Cloud Messaging <http://developer.android.com/google/gcm/gcm.html>`_ client
+`Firebase Cloud Messaging <https://firebase.google.com/docs/cloud-messaging/>`_ client
 built on top of `requests <http://docs.python-requests.org/en/latest/>`_ library.
 
-:mod:`gcmclient` Package
+:mod:`fcmclient` Package
 -------------------------
 
-.. automodule:: gcmclient.gcm
-    :members: GCM_URL
+.. automodule:: fcmclient.fcm
+    :members: FCM_URL
 
-.. autoclass:: GCM
+.. autoclass:: FCM
     :members: send
 
 .. autoclass:: JSONMessage
@@ -19,5 +19,5 @@ built on top of `requests <http://docs.python-requests.org/en/latest/>`_ library
 .. autoclass:: Result
     :members: success, canonical, not_registered, failed, needs_retry, retry, delay, backoff
 
-.. autoclass:: GCMAuthenticationError
+.. autoclass:: FCMAuthenticationError
 

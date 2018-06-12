@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-import gcmclient
 import argparse
-from gcmclient import __version__
+from .version import __version__
+from .api import FCM, JSONMessage
 import json
 import sys
+
 
 def parse_args(args=None):
     """
@@ -11,15 +12,15 @@ def parse_args(args=None):
     :return: argparse.Namespace
     """
     parser = argparse.ArgumentParser(
-        description='gcmclient v%s - import keys from one or more'
+        description='fcmclient v%s - import keys from one or more'
                     ' redis instances to another' % __version__)
 
     parser.add_argument('--version', action='version',
-                        version='gcmclient %s' % __version__)
+                        version='fcmclient %s' % __version__)
 
     parser.add_argument(
         '-k', '--api-key', type=str, required=True,
-        help='the gcm API key')
+        help='the fcm API key')
 
     parser.add_argument(
         '-r', '--registration-id', type=str, required=True,
@@ -47,8 +48,8 @@ def main(args=None, out=None):
 
     out.write("%s\n" % vars(args))
 
-    client = gcmclient.GCM(args.api_key)
-    message = gcmclient.JSONMessage(
+    client = FCM(args.api_key)
+    message = JSONMessage(
         [args.registration_id],
         data=args.data,
         message_body=args.message_body,

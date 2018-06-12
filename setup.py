@@ -1,20 +1,35 @@
+import os
+from os import path
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
+NAME = 'fcm-client'
+PKGNAME = 'fcmclient'
+
+ROOTDIR = path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(ROOTDIR, 'README.rst')) as f:
+    readme = f.read()
+
+with open(os.path.join(ROOTDIR, 'fcmclient', 'VERSION'), 'r') as f:
+    version = str(f.read().strip())
+
 setup(
-    name='gcm-client',
+    name=NAME,
     version='0.2.0',
-    author='Sardar Yumatov',
-    author_email='ja.doma@gmail.com',
-    url='https://bitbucket.org/sardarnl/gcm-client',
-    description='Python client for Google Cloud Messaging (GCM)',
-    long_description=open('README.rst').read(),
-    packages=['gcmclient'],
+    author='John Loehrer',
+    author_email='72squared@gmail.com',
+    url='https://github.com/happybits/%s' % NAME,
+    description='Python client for Firebase Cloud Messaging (FCM)',
+    long_description=readme,
+    include_package_data=True,
+    packages=[PKGNAME],
     license="Apache 2.0",
-    keywords='gcm push notification google cloud messaging android',
+    keywords='fcm push notification google cloud messaging android',
     install_requires=['requests', 'six'],
+    entry_points={'console_scripts': ['%s = %s.cli:main' % (PKGNAME, PKGNAME)]},
     classifiers=['Development Status :: 4 - Beta',
                  'Intended Audience :: Developers',
                  'License :: OSI Approved :: Apache Software License',
