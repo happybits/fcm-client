@@ -21,7 +21,7 @@ __all__ = ('FCMAuthenticationError', 'JSONMessage', 'FCM', 'Result')
 
 # More info: http://developer.android.com/google/fcm/fcm.html
 #: Default URL to FCM service.
-FCM_URL = 'https://android.googleapis.com/fcm/send'
+FCM_URL = 'https://fcm.googleapis.com/fcm/send'
 
 
 class FCMAuthenticationError(ValueError):
